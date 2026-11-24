@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mes séances · StudyLink</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script>SL.requireAuth();</script>
+</head>
+<body>
+  <div id="page">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+      <div>
+        <h1 class="page-title">Mes séances</h1>
+        <p class="page-sub">Retrouve tes séances réservées, tes créneaux proposés et leur statut.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn btn-outline btn-sm" href="demander.html"><span data-ic="plus"></span>Demander de l’aide</a>
+        <a class="btn btn-primary btn-sm" href="proposer.html"><span data-ic="plus"></span>Proposer de l’aide</a>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="tabs" style="margin-left:0;margin-top:26px">
+      <button class="tab" data-tab="avenir">À venir<span class="n" data-n="avenir"></span></button>
+      <button class="tab" data-tab="publies">Mes publications<span class="n" data-n="publies"></span></button>
+      <button class="tab" data-tab="historique">Historique<span class="n" data-n="historique"></span></button>
+    </div>
+    <div class="session-list" id="list"></div>
+  </div>
+
+  <script>
+    UI.appShell("seances");
+    UI.hydrateIcons();
+    var me = SL.currentUser();
+    var tab = ["avenir", "publies", "historique"].indexOf(SL.param("tab")) > -1 ? SL.param("tab") : "avenir";
+
+    function groups() {
+      var all = SL.mySlots(me.id);
+      var byStart = function (a, b) { return SL.slotStart(a) - SL.slotStart(b); };
+      return {
+        avenir: all.filter(function (s) { return s.statut === "reserve"; }).sort(function (a, b) {
+          var va = SL.hasStarted(a) ? 0 : 1, vb = SL.hasStarted(b) ? 0 : 1; return va - vb || byStart(a, b);
+        }),
+        publies: all.filter(function (s) { return s.statut === "ouvert" && s.auteurId === me.id && !SL.isPast(s); }).sort(byStart),
+        historique: all.filter(function (s) { return s.statut === "termine" || s.statut === "annule" || (s.statut === "ouvert" && SL.isPast(s)); })
+          .sort(function (a, b) { return byStart(b, a); })
+      };
+    }
+
+    function roleText(s) {
+      var other = SL.getUser(SL.otherOf(s, me.id));
+      var iHelp = SL.helperOf(s) === me.id;
+      if (!other) return s.type === "offre" ? "Cours proposé · en attente d’un étudiant" : "Demande d’aide · en attente d’un tuteur";
+      return iHelp ? "Tu aides <strong>" + SL.esc(SL.fullName(other)) + "</strong>" : "Tu es aidé·e par <strong>" + SL.esc(SL.fullName(other)) + "</strong>";
+    }
+    function status(s) {
+      if (s.statut === "termine") return '<span class="chip grey">Terminée</span>';
+      if (s.statut === "annule") return '<span class="chip red">Annulée</span>';
+      if (s.statut === "ouvert") return SL.isPast(s) ? '<span class="chip grey">Expirée</span>' : '<span class="chip orange">En attente</span>';
+      return SL.hasStarted(s) ? '<span class="chip orange">À valider</span>' : '<span class="chip green">Confirmée</span>';
+    }
+
+    function item(s) {
+      var other = SL.otherOf(s, me.id);
+      var toValidate = s.statut === "reserve" && SL.hasStarted(s);
+      var past = s.statut === "termine" || s.statut === "annule" || SL.isPast(s);
+      var actions = "";
+      if (s.statut === "reserve") {
+        if (other) actions += '<button class="btn btn-outline btn-sm" data-act="msg">' + UI.icon("message") + "Message</button>";
+        if (toValidate) actions += '<button class="btn btn-primary btn-sm" data-act="validate">' + UI.icon("check") + "Valider la séance</button>";
+        else actions += '<button class="btn btn-danger btn-sm" data-act="cancel">Annuler</button>';
+      } else if (s.statut === "ouvert" && !SL.isPast(s)) {
+        actions += '<button class="btn btn-danger btn-sm" data-act="cancel">' + UI.icon("trash") + "Supprimer</button>";
+      } else if (s.statut === "termine" && other) {
+        actions += '<button class="btn btn-outline btn-sm" data-act="msg">' + UI.icon("message") + "Message</button>";
+      }
+      var stars = s.rating ? '<span class="stars-view" title="Note">' + "★★★★★".slice(0, s.rating) + '<span style="color:#e2d9e4">' + "★★★★★".slice(s.rating) + "</span></span>" : "";
+      return '<article class="session' + (toValidate ? " to-validate" : "") + '" data-id="' + s.id + '">' +
+        '<div class="date-block ' + (past ? "grey" : s.type === "offre" ? "lilac" : "") + '"><span class="d">' + SL.dayNum(s.date) + '</span><span class="m">' + SL.monthShort(s.date) + "</span></div>" +
+        "<div><h3>" + SL.esc(s.matiere) + " " + status(s) + ' <span class="chip ' + (s.type === "offre" ? "lilac" : "blue") + '">' + (s.type === "offre" ? "Cours proposé" : "Demande d’aide") + "</span> " + stars + "</h3>" +
+        '<div class="who-line">' + roleText(s) + "</div>" +
+        '<div class="when"><span>' + UI.icon("calendar") + SL.fmtShort(s.date) + "</span><span>" + UI.icon("clock") + s.debut + " – " + s.fin + "</span><span>" + UI.icon("pin") + SL.esc(s.lieu) + "</span></div>" +
+        (s.feedback ? '<div class="muted" style="font-size:13px;margin-top:6px;font-style:italic">« ' + SL.esc(s.feedback) + " »</div>" : "") +
+        "</div>" +
+        '<div class="session-actions">' + actions + "</div></article>";
+    }
+
+    var EMPTY = {
+      avenir: ["Aucune séance prévue", "Réserve un créneau ou réponds à une demande d’aide.", '<a class="btn btn-primary" href="creneaux.html">Consulter les créneaux</a>'],
+      publies: ["Aucune publication en attente", "Propose ton aide ou publie une demande : elle apparaîtra ici en attendant qu’un étudiant la réserve.", '<a class="btn btn-primary" href="proposer.html">Proposer de l’aide</a>'],
+      historique: ["Pas encore d’historique", "Tes séances terminées et annulées apparaîtront ici.", ""]
+    };
+
+    function render() {
+      var g = groups();
+      document.querySelectorAll(".tab").forEach(function (t) { t.classList.toggle("active", t.dataset.tab === tab); });
+      document.querySelectorAll("[data-n]").forEach(function (n) { n.textContent = g[n.dataset.n].length; });
+      var list = g[tab];
+      document.getElementById("list").innerHTML = list.length ? list.map(item).join("") :
+        '<div class="empty"><div class="ic-box">' + UI.icon("calendar") + "</div><strong>" + EMPTY[tab][0] + "</strong>" + EMPTY[tab][1] + "<div>" + EMPTY[tab][2] + "</div></div>";
+      var st = SL.statsFor(me.id);
+      document.getElementById("stats").innerHTML =
+        '<div class="stat"><div class="v">' + st.received + '</div><div class="k">séance' + (st.received > 1 ? "s" : "") + " reçue" + (st.received > 1 ? "s" : "") + "</div></div>" +
+        '<div class="stat"><div class="v">' + st.given + '</div><div class="k">séance' + (st.given > 1 ? "s" : "") + " donnée" + (st.given > 1 ? "s" : "") + "</div></div>" +
+        '<div class="stat"><div class="v">' + (st.avg ? st.avg.toFixed(1) + " ★" : "—") + '</div><div class="k">note moyenne en tant que tuteur</div></div>';
+    }
+
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.onclick = function () { tab = t.dataset.tab; history.replaceState(null, "", "?tab=" + tab); render(); };
+    });
+
+    document.getElementById("list").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-act]"); if (!b) return;
+      var id = b.closest(".session").dataset.id, s = SL.getSlot(id);
+      if (b.dataset.act === "msg") location.href = "messagerie.html?c=" + SL.getOrCreateConversation(me.id, SL.otherOf(s, me.id));
+      if (b.dataset.act === "cancel") {
+        var mineOwn = s.auteurId === me.id;
+        var txt = mineOwn
+          ? (s.reservedBy ? "L’étudiant inscrit sera prévenu et le créneau sera supprimé." : "Ce créneau ne sera plus visible par les autres étudiants.")
+          : "Ton inscription sera annulée et le créneau redeviendra disponible pour les autres étudiants.";
+        UI.confirmDialog(mineOwn && !s.reservedBy ? "Supprimer cette publication ?" : "Annuler cette séance ?", txt, mineOwn && !s.reservedBy ? "Supprimer" : "Annuler la séance", true)
+          .then(function (ok) { if (ok) { SL.cancelSlot(id, me.id); UI.toast("C’est annulé."); render(); } });
+      }
+      if (b.dataset.act === "validate") validate(s);
+    });
+
+    function validate(s) {
+      var other = SL.getUser(SL.otherOf(s, me.id));
+      var iLearn = SL.learnerOf(s) === me.id;
+      var rating = 0;
+      var m = UI.modal('<div class="modal-center"><div class="ok-icon">' + UI.icon("check") + "</div><h2>Valider la séance</h2>" +
+        '<p class="modal-sub">' + SL.esc(s.matiere) + " avec " + SL.esc(SL.fullName(other)) + " · " + SL.fmtShort(s.date) + "</p>" +
+        (iLearn ? '<p style="margin-top:18px;font-weight:600">Comment s’est passée la séance ?</p><div class="star-input">' + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-star="' + i + '" aria-label="' + i + ' étoile(s)">★</button>'; }).join("") + "</div>" : "") +
+        "</div>" +
+        '<div class="field" style="margin-top:20px"><label for="fb">' + (iLearn ? "Un mot pour ton tuteur" : "Un commentaire") + ' <span class="opt">Facultatif</span></label><textarea class="textarea" id="fb" placeholder="Merci pour…"></textarea></div>' +
+        '<div class="modal-actions"><button class="btn btn-outline" data-close>Plus tard</button><button class="btn btn-primary" data-ok>Valider</button></div>', { size: "sm" });
+      m.el.querySelectorAll("[data-star]").forEach(function (b) {
+        b.onclick = function () { rating = +b.dataset.star; m.el.querySelectorAll("[data-star]").forEach(function (x) { x.classList.toggle("on", +x.dataset.star <= rating); }); };
+      });
+      m.el.querySelector("[data-ok]").onclick = function () {
+        SL.completeSlot(s.id, me.id, iLearn ? rating || null : s.rating, m.el.querySelector("#fb").value.trim());
+        m.close(); UI.toast("Séance validée, merci !"); render();
+      };
+    }
+
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Messagerie · StudyLink</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script>SL.requireAuth();</script>
+</head>
+<body>
+  <div id="page">
+    <a class="back-link" href="espace.html"><span data-ic="arrowLeft"></span>Retour à l’accueil</a>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <h1 class="page-title">Messagerie</h1>
+      <button class="btn btn-outline btn-sm" id="new-conv"><span data-ic="plus"></span>Nouvelle conversation</button>
+    </div>
+
+    <div class="chat" id="chat">
+      <div class="conv-list">
+        <div class="conv-search"><input class="input" id="conv-q" type="search" placeholder="Rechercher une conversation"></div>
+        <div class="conv-items" id="convs"></div>
+      </div>
+      <section class="thread" id="thread"></section>
+    </div>
+  </div>
+
+  <script>
+    UI.appShell("messagerie");
+    UI.hydrateIcons();
+    var me = SL.currentUser();
+    var current = SL.param("c");
+    var q = "";
+
+    function otherIn(c) { return SL.getUser(c.participants.find(function (p) { return p !== me.id; })); }
+
+    function renderList() {
+      var convs = SL.conversationsFor(me.id).filter(function (c) {
+        return !q || SL.fullName(otherIn(c)).toLowerCase().indexOf(q) > -1;
+      });
+      document.getElementById("convs").innerHTML = convs.length ? convs.map(function (c) {
+        var o = otherIn(c), last = c.messages[c.messages.length - 1], n = c.id === current ? 0 : SL.unreadIn(c, me.id);
+        var preview = last ? (last.from === me.id ? "Toi : " : "") + last.text : "Nouvelle conversation";
+        return '<a class="conv' + (c.id === current ? " active" : "") + (n ? " has-unread" : "") + '" href="?c=' + c.id + '" data-id="' + c.id + '">' +
+          '<div class="avatar sm round pink">' + SL.initials(o) + '</div><div class="c-body"><div class="c-top"><span class="c-name">' + SL.esc(SL.fullName(o)) + "</span>" +
+          '<span class="c-time">' + (last ? SL.relTime(last.at) : "") + '</span></div><div class="c-top"><span class="c-last">' + SL.esc(preview) + "</span>" +
+          (n ? '<span class="unread-badge">' + n + "</span>" : "") + "</div></div></a>";
+      }).join("") : '<div class="notif-empty">Aucune conversation.</div>';
+    }
+
+    function renderThread() {
+      var th = document.getElementById("thread"), chat = document.getElementById("chat");
+      var c = SL.conversationsFor(me.id).find(function (x) { return x.id === current; });
+      if (!c) {
+        chat.classList.remove("show-thread");
+        th.innerHTML = '<div class="thread-empty"><div><div class="ic-box">' + UI.icon("message") + '</div><strong style="color:var(--text)">Sélectionne une conversation</strong><p style="margin-top:6px">ou démarre-en une nouvelle avec un étudiant.</p></div></div>';
+        return;
+      }
+      chat.classList.add("show-thread");
+      SL.markConvRead(c.id, me.id);
+      var o = otherIn(c), lastDay = "";
+      var msgs = c.messages.map(function (m) {
+        var day = new Date(m.at).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+        var sep = day !== lastDay ? '<div class="day-sep">' + day + "</div>" : ""; lastDay = day;
+        if (m.from === "system") return sep + '<div class="msg system">' + SL.esc(m.text) + "</div>";
+        return sep + '<div class="msg ' + (m.from === me.id ? "me" : "them") + '">' + SL.esc(m.text) + "<time>" + SL.clock(m.at) + "</time></div>";
+      }).join("");
+      th.innerHTML = '<div class="thread-head"><button class="back-mobile" aria-label="Retour à tes conversations">' + UI.icon("arrowLeft") + "</button>" +
+        '<div class="avatar sm round pink">' + SL.initials(o) + '</div><div><div class="t-name">' + SL.esc(SL.fullName(o)) + '</div><div class="t-meta">' + SL.esc(o ? o.annee : "") + " · ENSC</div></div></div>" +
+        '<div class="msgs" id="msgs">' + (msgs || '<div class="day-sep">Dis bonjour à ' + SL.esc(o.prenom) + " 👋</div>") + "</div>" +
+        '<form class="composer" id="composer"><input class="input" id="msg-input" placeholder="Écris ton message…" autocomplete="off"><button class="btn btn-primary" aria-label="Envoyer">' + UI.icon("send") + "</button></form>";
+      var box = document.getElementById("msgs"); box.scrollTop = box.scrollHeight;
+      th.querySelector(".back-mobile").onclick = function () { current = null; history.replaceState(null, "", "messagerie.html"); renderAll(); };
+      document.getElementById("composer").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var input = document.getElementById("msg-input"), text = input.value.trim(); if (!text) return;
+        SL.sendMessage(c.id, me.id, text);
+        renderAll(); document.getElementById("msg-input").focus();
+        fakeReply(c.id, o);
+      });
+      if (window.innerWidth > 900) document.getElementById("msg-input").focus();
+    }
+
+    // Démo : les comptes fictifs répondent automatiquement
+    var REPLIES = ["Ça marche, à tout à l’heure !", "Super, merci 🙂", "Pas de souci, je regarde ça et je te redis.", "Oui, ça me va !", "Top, on fait comme ça 👍", "Ok ! Pense à prendre tes notes de cours."];
+    function fakeReply(convId, other) {
+      if (!other || !/^u_(lea|yanis|emma|hugo|ines|noah)$/.test(other.id)) return;
+      setTimeout(function () {
+        var box = document.getElementById("msgs");
+        if (box && current === convId) { box.insertAdjacentHTML("beforeend", '<div class="typing" id="typing">' + SL.esc(other.prenom) + " écrit…</div>"); box.scrollTop = box.scrollHeight; }
+      }, 700);
+      setTimeout(function () {
+        SL.sendMessage(convId, other.id, REPLIES[Math.floor(Math.random() * REPLIES.length)]);
+        if (current === convId) renderAll(); else renderList();
+      }, 2200);
+    }
+
+    function renderAll() { renderList(); renderThread(); UI.refreshUnread(); }
+
+    document.getElementById("convs").addEventListener("click", function (e) {
+      var a = e.target.closest(".conv"); if (!a) return;
+      e.preventDefault(); current = a.dataset.id; history.replaceState(null, "", "?c=" + current); renderAll();
+    });
+    document.getElementById("conv-q").addEventListener("input", function (e) { q = e.target.value.trim().toLowerCase(); renderList(); });
+
+    document.getElementById("new-conv").onclick = function () {
+      var users = SL.load().users.filter(function (u) { return u.id !== me.id; }).sort(function (a, b) { return a.prenom.localeCompare(b.prenom); });
+      var m = UI.modal('<h2 style="font-size:22px">Nouvelle conversation</h2><p class="modal-sub" style="text-align:left">Choisis un étudiant.</p>' +
+        '<input class="input" id="u-q" placeholder="Rechercher un étudiant" style="margin-top:16px" autofocus><div id="u-list" style="margin-top:12px;max-height:320px;overflow:auto"></div>', { size: "sm" });
+      function draw(f) {
+        m.el.querySelector("#u-list").innerHTML = users.filter(function (u) { return !f || SL.fullName(u).toLowerCase().indexOf(f) > -1; }).map(function (u) {
+          return '<a class="conv" data-u="' + u.id + '" style="border-radius:10px"><div class="avatar sm round pink">' + SL.initials(u) + '</div><div class="c-body"><div class="c-name">' + SL.esc(SL.fullName(u)) + '</div><div class="c-last">' + SL.esc(u.annee) + " · " + SL.esc((u.aide || []).join(", ") || "ENSC") + "</div></div></a>";
+        }).join("");
+      }
+      draw("");
+      m.el.querySelector("#u-q").addEventListener("input", function (e) { draw(e.target.value.trim().toLowerCase()); });
+      m.el.querySelector("#u-list").addEventListener("click", function (e) {
+        var a = e.target.closest("[data-u]"); if (!a) return;
+        current = SL.getOrCreateConversation(me.id, a.dataset.u); m.close(); history.replaceState(null, "", "?c=" + current); renderAll();
+      });
+    };
+
+    // Rafraîchit si un autre onglet modifie les données
+    window.addEventListener("storage", function () { renderList(); });
+    renderAll();
+  </script>
+</body>
+</html>

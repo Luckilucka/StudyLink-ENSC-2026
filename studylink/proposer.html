@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Proposer de l’aide · StudyLink</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/slot-form.js"></script>
+  <script>SL.requireAuth();</script>
+</head>
+<body>
+  <div id="page">
+    <a class="back-link" href="seances.html"><span data-ic="arrowLeft"></span>Retour à mes séances</a>
+    <div class="form-page">
+      <h1 class="page-title">Proposer de l’aide</h1>
+      <form class="form-card" id="slot-form" novalidate>
+        <h2>Nouvelle disponibilité</h2>
+        <p class="hint">Les champs marqués d’un * sont obligatoires.</p>
+        <div class="form-grid">
+          <div class="field span-2" data-f="matiere">
+            <label for="matiere">Matière *</label>
+            <input class="input select" id="matiere" list="matieres-list" placeholder="Sélectionner ou saisir une matière" autocomplete="off">
+            <datalist id="matieres-list"></datalist>
+            <div class="field-error"></div>
+          </div>
+          <div class="field" data-f="annee">
+            <label for="annee">Année d’études *</label>
+            <select class="select" id="annee"></select>
+            <div class="field-error"></div>
+          </div>
+          <div class="field" data-f="date">
+            <label for="date">Date *</label>
+            <input class="input" id="date" type="date">
+            <div class="field-error"></div>
+          </div>
+          <div class="field" data-f="debut">
+            <label for="debut">Heure de début *</label>
+            <select class="select" id="debut"></select>
+            <div class="field-error"></div>
+          </div>
+          <div class="field" data-f="fin">
+            <label for="fin">Heure de fin *</label>
+            <select class="select" id="fin"></select>
+            <div class="field-error"></div>
+          </div>
+          <div class="field span-2" data-f="lieu">
+            <label for="lieu">Lieu *</label>
+            <select class="select" id="lieu"></select>
+            <div class="field-error"></div>
+          </div>
+          <div class="field span-2" data-f="details">
+            <label for="details">Détails supplémentaires <span class="opt">Facultatif</span></label>
+            <textarea class="textarea" id="details" placeholder="Chapitres abordés, type d’aide, niveau…&#10;Précisez ce qui pourrait être utile aux étudiants."></textarea>
+            <div class="field-error"></div>
+          </div>
+        </div>
+        <button class="btn btn-mauve btn-submit" type="submit">Publier ma disponibilité</button>
+      </form>
+      <p class="form-foot">Votre disponibilité sera ajoutée au calendrier après publication.</p>
+    </div>
+  </div>
+  <script>
+    UI.appShell("proposer");
+    UI.hydrateIcons();
+    initSlotForm("offre");
+  </script>
+</body>
+</html>

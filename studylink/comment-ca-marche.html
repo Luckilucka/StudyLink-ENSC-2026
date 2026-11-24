@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comment ça marche ? · StudyLink</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <section class="page-hero">
+    <div class="inner">
+      <h1>Comment ça marche ?</h1>
+      <p>En quelques clics, trouve un étudiant pour t’expliquer une notion… ou aide quelqu’un dans une matière où tu es à l’aise.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="card-grid">
+      <div class="info-card"><div class="ic-box" data-ic="search"></div><h3>Tu as besoin d’aide ?</h3>
+        <p>Parcours les cours proposés par d’autres étudiants, filtre par matière ou par année, puis réserve le créneau qui te convient. Rien ne te correspond ? Publie une demande d’aide.</p></div>
+      <div class="info-card"><div class="ic-box lilac" data-ic="graduation"></div><h3>Tu veux aider ?</h3>
+        <p>Propose un créneau dans une matière que tu maîtrises, ou réponds directement à une demande d’aide publiée par un autre étudiant.</p></div>
+      <div class="info-card"><div class="ic-box green" data-ic="message"></div><h3>Vous échangez</h3>
+        <p>Utilisez la messagerie pour vous mettre d’accord sur le lieu et le contenu, puis validez la séance une fois terminée.</p></div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <h2 class="section-title">Étape par étape</h2>
+    <ol class="timeline" style="padding:0;margin:0">
+      <li><h3>Crée ton compte</h3><p>Inscris-toi avec ton adresse @ensc.fr et indique ton année d’étude (1A, 2A ou 3A).</p></li>
+      <li><h3>Complète ton profil</h3><p>Indique les matières où tu peux aider et celles où tu as besoin d’un coup de main.</p></li>
+      <li><h3>Trouve ou publie un créneau</h3><p>Dans « Consulter les créneaux », réserve un cours proposé ou réponds à une demande d’aide. Tu peux aussi publier ta propre disponibilité.</p></li>
+      <li><h3>Organisez-vous</h3><p>L’autre étudiant est prévenu automatiquement. Discutez des détails dans la messagerie.</p></li>
+      <li><h3>Validez la séance</h3><p>Après l’échange, valide la séance depuis « Mes séances » et laisse une note pour remercier ton tuteur.</p></li>
+    </ol>
+  </section>
+
+  <section class="section faq" style="padding-top:0">
+    <h2 class="section-title">Questions fréquentes</h2>
+    <details><summary>Est-ce payant ?</summary><p>Non. StudyLink repose sur l’entraide entre étudiants de l’ENSC : aider et être aidé est entièrement gratuit.</p></details>
+    <details><summary>Je suis en 1A, je peux proposer de l’aide ?</summary><p>Bien sûr ! Tu peux aider dans n’importe quelle matière où tu te sens à l’aise, quelle que soit ton année.</p></details>
+    <details><summary>Comment annuler une séance ?</summary><p>Depuis « Mes séances », clique sur « Annuler ». L’autre étudiant reçoit une notification et le créneau redevient disponible.</p></details>
+    <details><summary>Où ont lieu les séances ?</summary><p>À l’ENSC (bibliothèque, salles de travail, foyer) ou en visio : c’est indiqué sur chaque créneau.</p></details>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <div class="cta-band">
+      <div><h2>Prêt·e à te lancer ?</h2><p>Rejoins les étudiants de l’ENSC qui s’entraident déjà.</p></div>
+      <a class="btn btn-lg" href="inscription.html" id="cta">Créer mon compte</a>
+    </div>
+  </section>
+
+  <footer id="site-footer"></footer>
+  <script>
+    UI.publicHeader("comment");
+    UI.publicFooter();
+    document.querySelectorAll("[data-ic]").forEach(function (el) { el.innerHTML = UI.icon(el.dataset.ic); });
+    if (SL.currentUser()) { var c = document.getElementById("cta"); c.textContent = "Aller à mon espace"; c.href = "espace.html"; }
+  </script>
+</body>
+</html>

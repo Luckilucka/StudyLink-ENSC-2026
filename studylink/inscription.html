@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inscription · StudyLink</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script>if (SL.currentUser()) location.replace("espace.html");</script>
+  <style>
+    .auth-card.wide .form-grid { gap: 14px 120px; }
+    .auth-card.wide .field { gap: 8px; }
+  </style>
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <main class="auth-wrap">
+    <div class="auth-card wide">
+      <div class="auth-head" style="margin-bottom:18px">
+        <div class="auth-icon" data-ic="book"></div>
+        <h1>Inscription</h1>
+        <p>Crée ton compte StudyLink</p>
+      </div>
+
+      <form id="signup-form" novalidate>
+        <div class="form-error hidden" id="err" style="margin-bottom:16px"></div>
+        <div class="form-grid">
+          <div class="field" data-f="prenom">
+            <label for="prenom">Prénom*</label>
+            <input class="input" id="prenom" autocomplete="given-name" placeholder="Ton prénom">
+            <div class="field-error"></div>
+          </div>
+          <div class="field" data-f="email">
+            <label for="email">Adresse mail*</label>
+            <div class="input-icon"><span data-ic="mail"></span>
+              <input class="input" id="email" type="email" autocomplete="email" placeholder="prenom.nom@ensc.fr"></div>
+            <div class="field-error"></div>
+          </div>
+          <div class="field" data-f="nom">
+            <label for="nom">Nom*</label>
+            <input class="input" id="nom" autocomplete="family-name" placeholder="Ton nom">
+            <div class="field-error"></div>
+          </div>
+          <div class="field" data-f="password">
+            <label for="password">Mot de passe*</label>
+            <div class="input-icon has-toggle"><span data-ic="lock"></span>
+              <input class="input" id="password" type="password" autocomplete="new-password" placeholder="**********">
+              <button type="button" class="toggle-pw" aria-label="Afficher le mot de passe"></button></div>
+            <div class="field-error"></div>
+          </div>
+          <div class="field" data-f="annee">
+            <label for="annee">Année d’étude*</label>
+            <select class="input select" id="annee">
+              <option value="">1A / 2A / 3A</option><option>1A</option><option>2A</option><option>3A</option>
+            </select>
+            <div class="field-error"></div>
+          </div>
+          <div class="field" data-f="confirm">
+            <label for="confirm">Confirmer le mot de passe*</label>
+            <div class="input-icon has-toggle"><span data-ic="lock"></span>
+              <input class="input" id="confirm" type="password" autocomplete="new-password" placeholder="**********">
+              <button type="button" class="toggle-pw" aria-label="Afficher le mot de passe"></button></div>
+            <div class="field-error"></div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:26px">
+          <button class="btn btn-primary" type="submit" style="width:100%;max-width:410px">Créer mon compte</button>
+          <p class="auth-alt" style="margin-top:14px">Déja inscrit ? <a href="connexion.html">Se connecter</a></p>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer id="site-footer"></footer>
+  <script>
+    UI.authHeader();
+    UI.publicFooter();
+    UI.hydrateIcons();
+    UI.bindPasswordToggles();
+
+    var form = document.getElementById("signup-form");
+    function val(id) { return document.getElementById(id).value; }
+    function setErr(f, msg) {
+      var el = form.querySelector('[data-f="' + f + '"]');
+      el.classList.toggle("invalid", !!msg);
+      el.querySelector(".field-error").textContent = msg || "";
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var errors = {
+        prenom: val("prenom").trim() ? "" : "Indique ton prénom.",
+        nom: val("nom").trim() ? "" : "Indique ton nom.",
+        annee: val("annee") ? "" : "Choisis ton année d’étude.",
+        email: !val("email").trim() ? "Indique ton adresse mail."
+          : !/^[^\s@]+@ensc\.fr$/i.test(val("email").trim()) ? "Utilise ton adresse étudiante @ensc.fr." : "",
+        password: val("password").length < 8 ? "8 caractères minimum." : "",
+        confirm: val("confirm") !== val("password") || !val("confirm") ? "Les mots de passe ne correspondent pas." : ""
+      };
+      var ok = true;
+      Object.keys(errors).forEach(function (k) { setErr(k, errors[k]); if (errors[k]) ok = false; });
+      if (!ok) return;
+
+      var r = SL.register({ prenom: val("prenom"), nom: val("nom"), email: val("email"), password: val("password"), annee: val("annee") });
+      if (!r.ok) { setErr(r.field, r.error); return; }
+      UI.flash("Compte créé, bienvenue " + r.user.prenom + " !");
+      var next = SL.param("next");
+      location.href = next && !/^https?:|^\/\//.test(next) ? next : "espace.html";
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Consulter les créneaux · StudyLink</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script>SL.requireAuth();</script>
+</head>
+<body>
+  <div id="page">
+    <h1 class="page-title" style="margin-top:20px">Trouve un tuteur ou partage tes connaissances.</h1>
+    <p class="page-sub">Des étudiants qui connaissent tes cours et prennent le temps de t’aider.</p>
+
+    <div class="filters">
+      <div class="search-box"><span data-ic="search"></span><input class="input" id="q" type="search" placeholder="Rechercher une matière, un étudiant…"></div>
+      <select class="select" id="f-matiere" aria-label="Matière"></select>
+      <select class="select" id="f-annee" aria-label="Année">
+        <option value="">Année : toutes</option><option value="1A">Niveau 1A</option><option value="2A">Niveau 2A</option><option value="3A">Niveau 3A</option>
+      </select>
+      <select class="select" id="f-dispo" aria-label="Disponibilité">
+        <option value="">Disponibilité</option><option value="7">Cette semaine</option><option value="14">Sous 2 semaines</option><option value="31">Ce mois-ci</option>
+      </select>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="all">Tout</button>
+      <button class="tab" data-tab="offre">Cours proposés</button>
+      <button class="tab" data-tab="demande">Demandes d'aide</button>
+    </div>
+    <p class="result-count" id="count"></p>
+    <div class="slot-grid" id="grid"></div>
+  </div>
+
+  <script>
+    UI.appShell("creneaux");
+    UI.hydrateIcons();
+    var me = SL.currentUser();
+    var state = { tab: SL.param("tab") || "all", q: "", matiere: SL.param("matiere") || "", annee: "", dispo: "" };
+
+    var selM = document.getElementById("f-matiere");
+    selM.innerHTML = '<option value="">Matière : toutes</option>' + SL.MATIERES.map(function (m) { return "<option>" + m + "</option>"; }).join("");
+    selM.value = state.matiere;
+
+    function filtered() {
+      var limit = state.dispo ? SL.addDays(+state.dispo) : null;
+      var q = state.q.trim().toLowerCase();
+      return SL.availableSlots(me.id).filter(function (s) {
+        if (state.tab !== "all" && s.type !== state.tab) return false;
+        if (state.matiere && s.matiere !== state.matiere) return false;
+        if (state.annee && s.annee !== state.annee) return false;
+        if (limit && s.date > limit) return false;
+        if (q) {
+          var a = SL.getUser(s.auteurId);
+          var hay = (s.matiere + " " + s.details + " " + SL.fullName(a)).toLowerCase();
+          if (hay.indexOf(q) === -1) return false;
+        }
+        return true;
+      });
+    }
+
+    function render() {
+      document.querySelectorAll(".tab").forEach(function (t) {
+        t.classList.toggle("active", t.dataset.tab === state.tab);
+        t.classList.toggle("blue", t.dataset.tab === "demande");
+      });
+      var list = filtered();
+      var label = state.tab === "offre" ? ["cours proposé", "cours proposés"] : state.tab === "demande" ? ["demande d’aide", "demandes d’aide"] : ["créneau disponible", "créneaux disponibles"];
+      document.getElementById("count").textContent = list.length + " " + label[list.length > 1 ? 1 : 0];
+      var grid = document.getElementById("grid");
+      grid.innerHTML = list.length ? list.map(UI.slotCard).join("") :
+        '<div class="empty"><div class="ic-box">' + UI.icon("search") + '</div><strong>Aucun créneau ne correspond</strong>' +
+        "Essaie d’autres filtres, ou publie toi-même un créneau." +
+        '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><a class="btn btn-outline" href="demander.html">Demander de l’aide</a><a class="btn btn-primary" href="proposer.html">Proposer de l’aide</a></div></div>';
+    }
+
+    document.querySelectorAll(".tab").forEach(function (t) { t.onclick = function () { state.tab = t.dataset.tab; render(); }; });
+    document.getElementById("q").addEventListener("input", function (e) { state.q = e.target.value; render(); });
+    selM.onchange = function () { state.matiere = selM.value; render(); };
+    document.getElementById("f-annee").onchange = function (e) { state.annee = e.target.value; render(); };
+    document.getElementById("f-dispo").onchange = function (e) { state.dispo = e.target.value; render(); };
+
+    document.getElementById("grid").addEventListener("click", function (e) {
+      var card = e.target.closest(".slot-card"); if (!card) return;
+      if (e.target.closest("[data-info]")) showInfo(card.dataset.id);
+      if (e.target.closest("[data-book]")) book(card.dataset.id);
+    });
+
+    function showInfo(id) {
+      var s = SL.getSlot(id), a = SL.getUser(s.auteurId), offre = s.type === "offre";
+      var m = UI.modal(
+        '<div class="modal-center"><span class="chip ' + (offre ? "lilac" : "blue") + '">' + (offre ? "Cours proposé" : "Demande d’aide") + "</span>" +
+        '<h2 style="margin-top:14px">' + SL.esc(s.matiere) + "</h2></div>" +
+        '<div class="slot-person" style="margin-top:20px"><div class="avatar ' + (offre ? "" : "blue") + '">' + SL.initials(a) + '</div><div><div class="name">' + SL.esc(SL.fullName(a)) + '</div><div class="meta">' + SL.esc(a.annee) + " · ENSC" + (a.bio ? " · " + SL.esc(a.bio) : "") + "</div></div></div>" +
+        '<div class="info-rows">' +
+        row("calendar", "Date", SL.fmtLong(s.date)) +
+        row("clock", "Horaire", s.debut + " – " + s.fin) +
+        row("pin", "Lieu", s.lieu === "En ligne (visio)" ? s.lieu : "ENSC · " + s.lieu) +
+        row("graduation", "Niveau", s.annee || "Tous niveaux") +
+        row("book", offre ? "Contenu de la séance" : "Ce qui bloque", s.details || "Pas de détails supplémentaires.") +
+        "</div>" +
+        '<div class="modal-actions"><button class="btn btn-outline" data-msg>' + UI.icon("message") + "Envoyer un message</button>" +
+        '<button class="btn btn-primary" data-book>' + (offre ? "Réserver ce créneau" : "Je peux aider") + "</button></div>",
+        { size: "sm" });
+      m.el.querySelector("[data-msg]").onclick = function () {
+        location.href = "messagerie.html?c=" + SL.getOrCreateConversation(me.id, a.id);
+      };
+      m.el.querySelector("[data-book]").onclick = function () { m.close(); book(id); };
+    }
+    function row(ic, k, v) { return '<div class="info-row">' + UI.icon(ic) + '<div><div class="k">' + k + "</div>" + SL.esc(v) + "</div></div>"; }
+
+    function book(id) {
+      var r = SL.reserveSlot(id, me.id);
+      if (!r.ok) { UI.toast(r.error); render(); return; }
+      var s = r.slot, a = SL.getUser(s.auteurId), offre = s.type === "offre";
+      render();
+      UI.modal(
+        '<div class="modal-center"><div class="ok-icon">' + UI.icon("check") + "</div>" +
+        "<h2>" + (offre ? "C’est réservé, " : "Merci pour ton aide, ") + SL.esc(me.prenom) + " !</h2>" +
+        '<p class="modal-sub">' + (offre ? "Un nouveau déclic t’attend. Ton tuteur a été prévenu." : SL.esc(a.prenom) + " a été prévenu" + (a.genre === "f" ? "e" : "") + " que tu vas l’aider.") + "</p></div>" +
+        '<div class="recap"><div class="top"><div><h3>' + SL.esc(s.matiere) + '</h3><div class="p">' + SL.esc(SL.fullName(a)) + '</div></div><span class="chip green">Confirmée</span></div>' +
+        '<div class="date">' + SL.fmtLong(s.date) + '</div><div class="loc">' + s.debut + " – " + s.fin + " · " + (s.lieu === "En ligne (visio)" ? s.lieu : "ENSC · " + SL.esc(s.lieu)) + "</div></div>" +
+        '<div class="modal-actions"><a class="btn btn-primary" href="seances.html">Voir mes séances</a><a class="btn btn-outline" href="espace.html">Retour à l’accueil</a></div>' +
+        '<p class="modal-note">Besoin de changer de programme ? Tu peux annuler depuis <a href="seances.html">Mes séances</a>.</p>');
+    }
+
+    render();
+  </script>
+</body>
+</html>
