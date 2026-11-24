@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Connexion · StudyLink</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script>if (SL.currentUser()) location.replace(SL.param("next") || "espace.html");</script>
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <main class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-head">
+        <div class="auth-icon" data-ic="book"></div>
+        <h1>Connexion</h1>
+        <p>Accède à ton compte StudyLink</p>
+      </div>
+
+      <form class="auth-form" id="login-form" novalidate>
+        <div class="form-error hidden" id="err"></div>
+        <div class="field">
+          <label for="email">Adresse mail*</label>
+          <div class="input-icon"><span data-ic="mail"></span>
+            <input class="input" id="email" type="email" autocomplete="email" placeholder="prenom.nom@ensc.fr" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="password">Mot de passe*</label>
+          <div class="input-icon has-toggle"><span data-ic="lock"></span>
+            <input class="input" id="password" type="password" autocomplete="current-password" placeholder="**********" required>
+            <button type="button" class="toggle-pw" aria-label="Afficher le mot de passe"></button>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" style="margin-top:16px">Se connecter</button>
+      </form>
+
+      <hr class="auth-sep">
+      <p class="auth-alt">Pas encore de compte ? <a href="inscription.html" id="to-signup">S’inscrire</a></p>
+
+      <div class="demo-hint">
+        Compte de démonstration : <code>helia.usandisaga@ensc.fr</code> / <code>studylink</code>
+        — <button type="button" id="fill-demo">remplir</button>
+      </div>
+    </div>
+  </main>
+
+  <footer id="site-footer"></footer>
+  <script>
+    UI.authHeader();
+    UI.publicFooter();
+    UI.hydrateIcons();
+    UI.bindPasswordToggles();
+
+    var next = SL.param("next");
+    if (next) document.getElementById("to-signup").href = "inscription.html?next=" + encodeURIComponent(next);
+
+    document.getElementById("fill-demo").onclick = function () {
+      document.getElementById("email").value = "helia.usandisaga@ensc.fr";
+      document.getElementById("password").value = "studylink";
+    };
+
+    document.getElementById("login-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var email = document.getElementById("email").value, pw = document.getElementById("password").value, err = document.getElementById("err");
+      if (!email.trim() || !pw) { err.textContent = "Merci de remplir ton adresse mail et ton mot de passe."; err.classList.remove("hidden"); return; }
+      var r = SL.login(email, pw);
+      if (!r.ok) { err.textContent = r.error; err.classList.remove("hidden"); return; }
+      UI.flash("Content de te revoir, " + r.user.prenom + " !");
+      location.href = next && !/^https?:|^\/\//.test(next) ? next : "espace.html";
+    });
+  </script>
+</body>
+</html>

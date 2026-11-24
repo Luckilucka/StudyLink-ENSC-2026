@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mon profil · StudyLink</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script>SL.requireAuth();</script>
+</head>
+<body>
+  <div id="page">
+    <h1 class="page-title">Mon profil</h1>
+    <p class="page-sub">Mets à jour tes informations, ton année d’études et tes matières.</p>
+
+    <div class="profile-grid">
+      <div>
+        <div class="profile-card center">
+          <div class="avatar xl pink" id="p-avatar"></div>
+          <h2 id="p-name"></h2>
+          <p class="muted" id="p-label" style="font-size:14px"></p>
+          <p class="muted" id="p-email" style="font-size:13px;margin-top:2px"></p>
+          <div class="mini-stats" id="p-stats"></div>
+          <button class="btn btn-outline btn-block" style="margin-top:18px" data-logout><span data-ic="logout"></span>Se déconnecter</button>
+        </div>
+        <div class="profile-card">
+          <h3>Démo</h3>
+          <p class="muted" style="font-size:13px">Les données sont stockées dans ton navigateur. Tu peux revenir aux données de démonstration d’origine.</p>
+          <button class="btn btn-ghost btn-sm" id="reset" style="margin-top:10px;padding-left:0"><span data-ic="refresh"></span>Réinitialiser la démo</button>
+        </div>
+      </div>
+
+      <div>
+        <form class="profile-card" id="info-form" novalidate>
+          <h3>Mes informations</h3>
+          <p class="muted" style="font-size:13px;margin-bottom:18px">Ces informations sont visibles par les autres étudiants.</p>
+          <div class="form-grid">
+            <div class="field" data-f="prenom"><label for="prenom">Prénom *</label><input class="input" id="prenom"><div class="field-error"></div></div>
+            <div class="field" data-f="nom"><label for="nom">Nom *</label><input class="input" id="nom"><div class="field-error"></div></div>
+            <div class="field"><label for="annee">Année d’études *</label><select class="select" id="annee"><option>1A</option><option>2A</option><option>3A</option></select></div>
+            <div class="field"><label for="genre">Affichage <span class="opt">Facultatif</span></label>
+              <select class="select" id="genre"><option value="">Étudiant(e)</option><option value="f">Étudiante</option><option value="m">Étudiant</option></select></div>
+            <div class="field span-2"><label for="bio">Présentation <span class="opt">Facultatif</span></label><textarea class="textarea" id="bio" placeholder="Quelques mots sur toi, tes points forts…"></textarea></div>
+            <div class="field span-2"><label>Je peux aider en</label><div class="chip-input" data-chips="aide"></div></div>
+            <div class="field span-2"><label>J’ai besoin d’aide en</label><div class="chip-input" data-chips="besoin"></div></div>
+          </div>
+          <button class="btn btn-primary" type="submit" style="margin-top:22px">Enregistrer</button>
+        </form>
+
+        <form class="profile-card" id="pw-form" novalidate>
+          <h3>Mot de passe</h3>
+          <div class="form-grid" style="margin-top:14px">
+            <div class="field span-2" data-f="old"><label for="old">Mot de passe actuel</label><div class="input-icon has-toggle"><span data-ic="lock"></span><input class="input" id="old" type="password" autocomplete="current-password"><button type="button" class="toggle-pw"></button></div><div class="field-error"></div></div>
+            <div class="field" data-f="new"><label for="new">Nouveau mot de passe</label><div class="input-icon has-toggle"><span data-ic="lock"></span><input class="input" id="new" type="password" autocomplete="new-password"><button type="button" class="toggle-pw"></button></div><div class="field-error"></div></div>
+            <div class="field" data-f="conf"><label for="conf">Confirmer</label><div class="input-icon has-toggle"><span data-ic="lock"></span><input class="input" id="conf" type="password" autocomplete="new-password"><button type="button" class="toggle-pw"></button></div><div class="field-error"></div></div>
+          </div>
+          <button class="btn btn-outline" type="submit" style="margin-top:22px">Changer le mot de passe</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    UI.appShell("profil");
+    UI.hydrateIcons();
+    UI.bindPasswordToggles();
+    UI.bindLogout(document);
+    var me = SL.currentUser();
+    var chips = { aide: (me.aide || []).slice(), besoin: (me.besoin || []).slice() };
+
+    function header() {
+      me = SL.currentUser();
+      document.getElementById("p-avatar").textContent = SL.initials(me);
+      document.getElementById("p-name").textContent = SL.fullName(me);
+      document.getElementById("p-label").textContent = SL.studentLabel(me);
+      document.getElementById("p-email").textContent = me.email;
+      var st = SL.statsFor(me.id);
+      document.getElementById("p-stats").innerHTML = "<div><b>" + st.given + "</b><span>séances données</span></div><div><b>" + st.received + "</b><span>séances reçues</span></div>";
+      document.querySelector(".side-user strong").textContent = SL.fullName(me);
+      document.querySelector(".side-user span").textContent = SL.studentLabel(me);
+      document.querySelector(".topbar .who").innerHTML = SL.esc(SL.shortName(me)) + "&nbsp; / &nbsp;" + SL.esc(me.annee);
+    }
+
+    ["prenom", "nom", "annee", "genre", "bio"].forEach(function (k) { document.getElementById(k).value = me[k] || ""; });
+
+    function drawChips(key) {
+      var box = document.querySelector('[data-chips="' + key + '"]');
+      var rest = SL.MATIERES.filter(function (m) { return chips[key].indexOf(m) === -1; });
+      box.innerHTML = chips[key].map(function (m) {
+        return '<span class="chip ' + (key === "aide" ? "lilac" : "blue") + '">' + SL.esc(m) + ' <button type="button" data-rm="' + SL.esc(m) + '" aria-label="Retirer ' + SL.esc(m) + '">×</button></span>';
+      }).join("") + (rest.length ? '<select aria-label="Ajouter une matière"><option value="">+ Ajouter une matière</option>' + rest.map(function (m) { return "<option>" + m + "</option>"; }).join("") + "</select>" : "");
+      var sel = box.querySelector("select");
+      if (sel) sel.onchange = function () { if (sel.value) { chips[key].push(sel.value); drawChips(key); } };
+      box.querySelectorAll("[data-rm]").forEach(function (b) { b.onclick = function () { chips[key] = chips[key].filter(function (x) { return x !== b.dataset.rm; }); drawChips(key); }; });
+    }
+    drawChips("aide"); drawChips("besoin");
+    header();
+
+    function setErr(form, f, msg) { var el = form.querySelector('[data-f="' + f + '"]'); el.classList.toggle("invalid", !!msg); el.querySelector(".field-error").textContent = msg || ""; }
+
+    document.getElementById("info-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var f = e.target, p = document.getElementById("prenom").value.trim(), n = document.getElementById("nom").value.trim();
+      setErr(f, "prenom", p ? "" : "Requis."); setErr(f, "nom", n ? "" : "Requis.");
+      if (!p || !n) return;
+      SL.updateUser(me.id, { prenom: p, nom: n, annee: document.getElementById("annee").value, genre: document.getElementById("genre").value,
+        bio: document.getElementById("bio").value.trim(), aide: chips.aide, besoin: chips.besoin });
+      header(); UI.toast("Profil enregistré");
+    });
+
+    document.getElementById("pw-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var f = e.target, o = document.getElementById("old").value, nw = document.getElementById("new").value, c = document.getElementById("conf").value;
+      var cur = SL.currentUser();
+      var eo = o !== cur.password ? "Mot de passe incorrect." : "", en = nw.length < 8 ? "8 caractères minimum." : "", ec = c !== nw ? "Ne correspond pas." : "";
+      setErr(f, "old", eo); setErr(f, "new", en); setErr(f, "conf", ec);
+      if (eo || en || ec) return;
+      SL.updateUser(me.id, { password: nw }); f.reset(); UI.toast("Mot de passe modifié");
+    });
+
+    document.getElementById("reset").onclick = function () {
+      UI.confirmDialog("Réinitialiser la démo ?", "Toutes les données (comptes créés, créneaux, messages) seront remplacées par les données de démonstration et tu seras déconnecté·e.", "Réinitialiser", true)
+        .then(function (ok) { if (ok) { SL.resetDemo(); location.href = "index.html"; } });
+    };
+  </script>
+</body>
+</html>

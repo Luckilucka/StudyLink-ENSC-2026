@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>À propos · StudyLink</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <section class="page-hero">
+    <div class="inner">
+      <h1>À propos de StudyLink</h1>
+      <p>Un coup de main aujourd’hui, un savoir partagé demain.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="info-card" style="padding:30px 32px">
+      <h3 style="font-size:22px;margin-bottom:12px">Notre idée</h3>
+      <p style="font-size:16px;line-height:1.7">StudyLink est une plateforme de tutorat entre étudiants de l’ENSC, imaginée dans le cadre du projet transpromotion. Le constat est simple : dans chaque promo, certains bloquent sur une notion que d’autres maîtrisent parfaitement. StudyLink les met en relation pour organiser des séances d’entraide, simplement et gratuitement.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <h2 class="section-title">Nos valeurs</h2>
+    <div class="card-grid">
+      <div class="info-card"><div class="ic-box" data-ic="heart"></div><h3>Bienveillance</h3><p>On ne juge personne : demander de l’aide est une force, pas une faiblesse.</p></div>
+      <div class="info-card"><div class="ic-box lilac" data-ic="refresh"></div><h3>Réciprocité</h3><p>Chacun peut être aidé dans une matière et aider dans une autre. L’entraide fonctionne dans les deux sens.</p></div>
+      <div class="info-card"><div class="ic-box green" data-ic="shield"></div><h3>Entre étudiants ENSC</h3><p>La plateforme est réservée aux adresses @ensc.fr pour rester entre nous, en confiance.</p></div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <h2 class="section-title">Le projet</h2>
+    <div class="card-grid">
+      <div class="info-card"><div class="ic-box" data-ic="layers"></div><h3>Projet transpromotion</h3><p>Conception (maquettes Figma) et développement réalisés par des étudiants de différentes promotions de l’ENSC.</p></div>
+      <div class="info-card"><div class="ic-box lilac" data-ic="graduation"></div><h3>Pour les 1A, 2A et 3A</h3><p>Toutes les promotions peuvent proposer et demander de l’aide, dans toutes les matières du cursus.</p></div>
+      <div class="info-card"><div class="ic-box green" data-ic="mail"></div><h3>Nous contacter</h3><p>Une idée, un bug ? Écris-nous à <a href="mailto:studylink@ensc.fr">studylink@ensc.fr</a>.</p></div>
+    </div>
+  </section>
+
+  <footer id="site-footer"></footer>
+  <script>
+    UI.publicHeader("apropos");
+    UI.publicFooter();
+    document.querySelectorAll("[data-ic]").forEach(function (el) { el.innerHTML = UI.icon(el.dataset.ic); });
+  </script>
+</body>
+</html>

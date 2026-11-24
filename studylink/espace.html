@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mon espace · StudyLink</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script>SL.requireAuth();</script>
+</head>
+<body>
+  <div id="page">
+    <div class="eyebrow">Ton espace d’entraide</div>
+    <h1 class="page-title">Bienvenue sur StudyLink<span id="hello"></span></h1>
+    <p class="page-sub">Trouve un coup de main, partage tes connaissances et organise tes échanges.</p>
+
+    <div id="next-session"></div>
+
+    <h2 class="block-title">Apprendre et s’entraider</h2>
+    <p class="block-sub">Choisis ce dont tu as besoin pour avancer dans tes cours.</p>
+    <div class="tile-grid">
+      <div class="tile featured">
+        <div class="ic-box" data-ic="search"></div>
+        <h3>Consulter les créneaux</h3>
+        <p>Parcours les cours proposés et les demandes d’aide pour trouver un échange.</p>
+        <a class="btn btn-primary" href="creneaux.html">Explorer les créneaux <span data-ic="arrowRight"></span></a>
+      </div>
+      <div class="tile">
+        <div class="ic-box" data-ic="plus"></div>
+        <h3>Demander de l’aide</h3>
+        <p>Une notion te bloque ? Publie ta demande pour être accompagné par un étudiant.</p>
+        <a class="btn btn-soft" href="demander.html">Créer une demande <span data-ic="arrowRight"></span></a>
+      </div>
+      <div class="tile">
+        <div class="ic-box lilac" data-ic="plus"></div>
+        <h3>Proposer de l’aide</h3>
+        <p>À l’aise dans une matière ? Partage tes connaissances et propose un créneau.</p>
+        <a class="btn btn-soft" href="proposer.html">Proposer un créneau <span data-ic="arrowRight"></span></a>
+      </div>
+    </div>
+
+    <h2 class="block-title">Retrouver mon espace</h2>
+    <p class="block-sub">Tout pour suivre et préparer tes échanges au même endroit.</p>
+    <div class="tile-grid">
+      <div class="tile">
+        <div class="ic-box lilac" data-ic="calendar"></div>
+        <h3>Mes séances</h3>
+        <p>Retrouve tes séances réservées, tes créneaux proposés et leur statut.</p>
+        <a class="btn btn-soft" href="seances.html">Voir mes séances <span data-ic="arrowRight"></span></a>
+      </div>
+      <div class="tile">
+        <div class="ic-box" data-ic="mail"></div>
+        <h3>Messagerie</h3>
+        <p>Échange avec les autres étudiants et prépare tes prochaines séances.</p>
+        <a class="btn btn-soft" href="messagerie.html">Ouvrir la messagerie <span data-ic="arrowRight"></span></a>
+      </div>
+      <div class="tile">
+        <div class="ic-box lilac" data-ic="user"></div>
+        <h3>Mon profil</h3>
+        <p>Mets à jour tes informations, ton année d’études et tes matières.</p>
+        <a class="btn btn-soft" href="profil.html">Gérer mon profil <span data-ic="arrowRight"></span></a>
+      </div>
+    </div>
+
+    <p class="muted" style="font-size:13px;margin-top:34px">StudyLink · Un coup de main aujourd’hui, un savoir partagé demain.</p>
+  </div>
+
+  <script>
+    UI.appShell("accueil");
+    UI.hydrateIcons();
+    var me = SL.currentUser();
+    document.getElementById("hello").textContent = ", " + me.prenom;
+
+    // Bandeau « prochaine séance » / « séance à valider »
+    var mine = SL.mySlots(me.id).filter(function (s) { return s.statut === "reserve"; })
+      .sort(function (a, b) { return SL.slotStart(a) - SL.slotStart(b); });
+    var toValidate = mine.filter(function (s) { return SL.hasStarted(s); });
+    var upcoming = mine.filter(function (s) { return !SL.hasStarted(s); });
+    var box = document.getElementById("next-session");
+    function banner(s, title, btn) {
+      var other = SL.getUser(SL.otherOf(s, me.id));
+      box.innerHTML += '<div class="next-banner"><div class="txt"><strong>' + title + "</strong>" +
+        SL.esc(s.matiere) + " avec " + SL.esc(SL.fullName(other)) + " · " + SL.fmtShort(s.date) + " · " + s.debut + " – " + s.fin + " · " + SL.esc(s.lieu) +
+        '</div><a class="btn btn-sm btn-outline" href="seances.html">' + btn + "</a></div>";
+    }
+    if (toValidate.length) banner(toValidate[0], "Séance à valider", "Valider");
+    if (upcoming.length) banner(upcoming[0], "Ta prochaine séance", "Voir mes séances");
+  </script>
+</body>
+</html>
