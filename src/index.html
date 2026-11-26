@@ -1,197 +1,60 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyLink — Entraide & Tutorat ENSC</title>
-    <style>
-        :root {
-            --primary: #0f2c59;
-            --accent: #e91e63;
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --text: #1e293b;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        header {
-            background: var(--card);
-            padding: 1rem 5%;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: var(--primary);
-            letter-spacing: -0.5px;
-        }
-
-        .logo span {
-            color: var(--accent);
-        }
-
-        .badge-ensc {
-            background: #e2e8f0;
-            color: var(--primary);
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        main {
-            flex: 1;
-            max-width: 900px;
-            margin: 3rem auto;
-            padding: 0 1.5rem;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 2.4rem;
-            color: var(--primary);
-            margin-bottom: 1rem;
-        }
-
-        p.subtitle {
-            font-size: 1.15rem;
-            color: #475569;
-            margin-bottom: 2.5rem;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .card {
-            background: var(--card);
-            padding: 1.8rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-            border: 1px solid #e2e8f0;
-            transition: transform 0.2s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-        }
-
-        .card h3 {
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .mystery-box {
-            background: linear-gradient(135deg, var(--primary), #1e40af);
-            color: white;
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(15, 44, 89, 0.2);
-        }
-
-        .mystery-box h2 {
-            margin-bottom: 0.8rem;
-            font-size: 1.6rem;
-        }
-
-        .mystery-box p {
-            margin-bottom: 1.5rem;
-            opacity: 0.9;
-        }
-
-        .btn-mystery {
-            display: inline-block;
-            background-color: var(--accent);
-            color: white;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1.1rem;
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
-            transition: all 0.25s ease;
-        }
-
-        .btn-mystery:hover {
-            background-color: #c2185b;
-            transform: scale(1.05);
-        }
-
-        footer {
-            text-align: center;
-            padding: 1.5rem;
-            font-size: 0.9rem;
-            color: #64748b;
-            border-top: 1px solid #e2e8f0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StudyLink · L’entraide étudiante, simplement</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
 </head>
 <body>
+  <header id="site-header"></header>
 
-    <header>
-        <div class="logo">Study<span>Link</span></div>
-        <div class="badge-ensc">Bordeaux INP — ENSC</div>
-    </header>
+  <section class="hero">
+    <div class="inner">
+      <h1>L’entraide étudiante, simplement.</h1>
+      <p class="lead">Besoin d'un coup de main dans une matière ? Envie de partager tes connaissances ? Trouve de l'aide auprès des autres étudiants de l'ENSC ou proposes-en !</p>
+      <div class="actions">
+        <a class="btn btn-primary" id="cta-find" href="creneaux.html">Trouver de l’aide <span id="ic1"></span></a>
+        <a class="btn btn-outline" id="cta-offer" href="proposer.html">Proposer de l’aide <span id="ic2"></span></a>
+      </div>
+    </div>
+  </section>
 
-    <main>
-        <h1>L'entraide entre promotions, sans prise de tête.</h1>
-        <p class="subtitle">
-            Bloqué en Traitement du Signal, en C# ou sur ton cours de CCU ? 
-            Trouve un tuteur 2A/3A disponible au Patio en moins de 2 minutes.
-        </p>
+  <section class="section">
+    <h2 class="section-title">Comment ça marche ?</h2>
+    <div class="steps">
+      <div class="step"><span class="num">1</span><span id="st1"></span><h3>Inscris-toi</h3><p>Crée ton compte !</p></div>
+      <div class="step"><span class="num">2</span><span id="st2"></span><h3>Trouve</h3><p>Recherche un cours ou<br>propose ton aide !</p></div>
+      <div class="step"><span class="num">3</span><span id="st3"></span><h3>Échange</h3><p>Organise et/ou valide ta séance d’entraide !</p></div>
+    </div>
+    <div class="two-way">
+      <span id="st4"></span>
+      <div>
+        <h3>L’entraide fonctionne dans les deux sens !</h3>
+        <p>Tu peux demander de l’aide dans une matière et en proposer dans une autre.</p>
+      </div>
+    </div>
+  </section>
 
-        <div class="grid">
-            <div class="card">
-                <h3>📚 Toutes les matières</h3>
-                <p>Des sciences dures aux sciences humaines, fini les blocages en silence.</p>
-            </div>
-            <div class="card">
-                <h3>📅 Créneaux flexibles</h3>
-                <p>Synchronise tes disponibilités entre deux cours sans friction logistique.</p>
-            </div>
-            <div class="card">
-                <h3>🤝 100 % Bienveillant</h3>
-                <p>Un espace sécurisé conçu par et pour les cogniticiens de l'ENSC.</p>
-            </div>
-        </div>
+  <footer id="site-footer"></footer>
 
-        <section class="mystery-box">
-            <h2>🎁 Accès Anticipé — Bêta Privée ENSC</h2>
-            <p>
-                Tu as découvert l'accès secret des développeurs ! Clique sur le lien mystère ci-dessous 
-                pour débloquer les annales corrigées et le générateur automatique de cahier des charges.
-            </p>
-            <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" 
-               target="_blank" 
-               rel="noopener noreferrer" 
-               class="btn-mystery"
-               aria-label="Découvrir le lien mystère StudyLink">
-               🔮 Ouvrir le Lien Mystère
-            </a>
-        </section>
-    </main>
-
-    <footer>
-        Projet TransPromotion 2026-2027 — Équipe StudyLink (EN
+  <script>
+    UI.publicHeader("accueil");
+    UI.publicFooter();
+    document.getElementById("ic1").outerHTML = UI.icon("arrowRight");
+    document.getElementById("ic2").outerHTML = UI.icon("arrowRight");
+    document.getElementById("st1").outerHTML = UI.FILLED.userCircle;
+    document.getElementById("st2").outerHTML = UI.FILLED.searchBig;
+    document.getElementById("st3").outerHTML = UI.FILLED.folder;
+    document.getElementById("st4").outerHTML = UI.FILLED.group;
+    // Si non connecté, les boutons mènent à la connexion puis à la bonne page
+    if (!SL.currentUser()) {
+      document.getElementById("cta-find").href = "connexion.html?next=creneaux.html";
+      document.getElementById("cta-offer").href = "connexion.html?next=proposer.html";
+    }
+  </script>
+</body>
+</html>
